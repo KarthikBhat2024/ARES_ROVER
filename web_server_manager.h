@@ -6,16 +6,18 @@
 #include <ESPmDNS.h>
 #include "config.h"
 #include "motor_controller.h"
+#include "arm_gateway.h"
 
 // ==============================================================================
-// AresWebManager: High-Performance Local Wi-Fi & Web Teleoperation Engine
+// AresWebManager: High-Performance Integrated Teleoperation Engine
+// Hosts unified dashboard, rover drive API, and ESP8266 arm proxy bridge
 // ==============================================================================
 
 class AresWebManager {
 public:
     AresWebManager();
 
-    // Initialize Access Point, DNS Captive Portal, and HTTP REST Endpoints
+    // Initialize Access Point, DNS Captive Portal, and HTTP Endpoints
     void begin();
 
     // Call inside main loop() to service HTTP and DNS requests
@@ -35,12 +37,37 @@ private:
     uint32_t _bootTimeSeconds;
 
     void registerHandlers();
+    void sendCorsHeaders();
+
+    // Web Root & Captive Portal
     void handleRoot();
-    void handleCommand();
-    void handleSpeed();
-    void handleStatus();
-    void handleAux();
     void handleNotFound();
+    void handleOptions();
+
+    // Unified REST APIs
+    void handleApiStatus();
+    void handleApiDrive();
+    void handleApiStop();
+    void handleApiEmergencyStop();
+    void handleApiSpeed();
+    void handleApiAux();
+
+    // Arm Proxy APIs (Forwards to ESP8266)
+    void handleApiArmStatus();
+    void handleApiArmServo();
+    void handleApiArmServosBatch();
+    void handleApiArmHome();
+    void handleApiArmStop();
+    void handleApiArmLimits();
+
+    // Legacy Route Adapters
+    void handleLegacyCmd();
+    void handleLegacySpeed();
+    void handleLegacyStatus();
+    void handleLegacyAux();
+
+    // Motion execution helper
+    void executeDriveCommand(const String& cmd, int speedOverride = -1);
 };
 
 extern AresWebManager WebManager;

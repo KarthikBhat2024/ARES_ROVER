@@ -1,0 +1,2119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#070b14">
+  <meta name="description" content="ARES - Autonomous Response & Exploration System // Unified Rover & Robotic Arm Command Center">
+  <title>ARES // Mission Control Dashboard</title>
+  <style>
+    :root {
+      --bg-primary: #070b14;
+      --bg-surface: rgba(14, 22, 37, 0.85);
+      --bg-surface-elevated: rgba(22, 34, 57, 0.9);
+      --bg-glass: rgba(15, 23, 42, 0.7);
+      --border-subtle: rgba(56, 189, 248, 0.15);
+      --border-glow: rgba(0, 240, 255, 0.4);
+      --neon-cyan: #00f0ff;
+      --neon-blue: #38bdf8;
+      --neon-emerald: #10b981;
+      --neon-amber: #f59e0b;
+      --neon-crimson: #ef4444;
+      --neon-purple: #a855f7;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --glow-cyan: 0 0 16px rgba(0, 240, 255, 0.35);
+      --glow-red: 0 0 20px rgba(239, 68, 68, 0.5);
+      --glow-emerald: 0 0 16px rgba(16, 185, 129, 0.35);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+    }
+
+    body {
+      background: var(--bg-primary);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(30, 58, 102, 0.35) 0%, transparent 60%),
+        radial-gradient(circle at 10% 90%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(0, 240, 255, 0.08) 0%, transparent 40%);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    /* Top Command Header */
+    header {
+      background: rgba(7, 11, 20, 0.95);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 10px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(56, 189, 248, 0.05) 100%);
+      border: 1.5px solid var(--neon-cyan);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--glow-cyan);
+    }
+
+    .brand-badge svg {
+      width: 22px;
+      height: 22px;
+      fill: var(--neon-cyan);
+    }
+
+    .brand-text h1 {
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-text h1 span {
+      font-size: 10px;
+      padding: 2px 7px;
+      background: rgba(0, 240, 255, 0.15);
+      border: 1px solid var(--neon-cyan);
+      border-radius: 4px;
+      color: var(--neon-cyan);
+      letter-spacing: 1px;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+    }
+
+    /* Dual Hardware Status Capsules */
+    .hud-controls-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .capsule {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: 30px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--neon-emerald);
+      box-shadow: 0 0 8px var(--neon-emerald);
+      animation: pulseAnim 1.8s infinite;
+    }
+
+    .pulse-dot.warning {
+      background: var(--neon-amber);
+      box-shadow: 0 0 8px var(--neon-amber);
+    }
+
+    .pulse-dot.offline {
+      background: var(--neon-crimson);
+      box-shadow: 0 0 8px var(--neon-crimson);
+      animation: none;
+    }
+
+    @keyframes pulseAnim {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.6; }
+    }
+
+    /* Master All-Stop E-STOP button in Header */
+    .btn-header-estop {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(185, 28, 28, 0.5) 100%);
+      border: 2px solid var(--neon-crimson);
+      border-radius: 30px;
+      padding: 6px 14px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: var(--glow-red);
+      transition: all 0.15s ease;
+    }
+
+    .btn-header-estop svg {
+      width: 14px;
+      height: 14px;
+      fill: #fff;
+    }
+
+    .btn-header-estop:hover {
+      background: var(--neon-crimson);
+      box-shadow: 0 0 25px var(--neon-crimson);
+    }
+
+    .btn-header-estop:active {
+      transform: scale(0.94);
+    }
+
+    .btn-help-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-subtle);
+      color: var(--neon-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .btn-help-icon:hover {
+      border-color: var(--neon-cyan);
+      box-shadow: var(--glow-cyan);
+    }
+
+    /* Subsystem Navigation Bar */
+    .subsystem-nav {
+      background: rgba(11, 18, 32, 0.9);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 8px 18px;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+    }
+
+    .nav-tab-btn {
+      padding: 8px 18px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .nav-tab-btn svg {
+      width: 15px;
+      height: 15px;
+      fill: currentColor;
+    }
+
+    .nav-tab-btn.active {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.25) 0%, rgba(56, 189, 248, 0.1) 100%);
+      border-color: var(--neon-cyan);
+      color: #fff;
+      box-shadow: var(--glow-cyan);
+    }
+
+    /* Main Command Workspace Grid */
+    main {
+      padding: 18px;
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      flex: 1;
+    }
+
+    @media (min-width: 1024px) {
+      main.layout-split {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .subsystem-view {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .subsystem-view.hidden {
+      display: none !important;
+    }
+
+    /* Glassmorphism Panel Card */
+    .card-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(12px);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--neon-cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+    }
+
+    .panel-tag {
+      font-size: 10px;
+      font-family: monospace;
+      padding: 3px 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 4px;
+      color: var(--text-secondary);
+    }
+
+    /* Quick Stats Trio */
+    .stats-trio {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat-card {
+      background: rgba(7, 12, 22, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      text-align: center;
+    }
+
+    .stat-card-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .stat-card-value {
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--text-primary);
+      margin-top: 3px;
+      font-family: monospace;
+    }
+
+    /* 6-Wheel Rover Chassis Map */
+    .chassis-container {
+      position: relative;
+      height: 190px;
+      background: rgba(5, 9, 16, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .rover-hull {
+      width: 90px;
+      height: 140px;
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid var(--neon-blue);
+      border-radius: 18px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+      transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .hull-heading-arrow {
+      font-size: 18px;
+      color: var(--neon-cyan);
+      margin-bottom: 4px;
+    }
+
+    .hull-label {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+    }
+
+    .wheel-unit {
+      width: 22px;
+      height: 38px;
+      background: #334155;
+      border: 1.5px solid #64748b;
+      border-radius: 5px;
+      position: absolute;
+      transition: all 0.2s ease;
+    }
+
+    .wheel-unit.active-fwd {
+      background: var(--neon-emerald);
+      border-color: #fff;
+      box-shadow: 0 0 12px var(--neon-emerald);
+      animation: wheelRollFwd 0.3s infinite linear;
+    }
+
+    .wheel-unit.active-rev {
+      background: var(--neon-amber);
+      border-color: #fff;
+      box-shadow: 0 0 12px var(--neon-amber);
+      animation: wheelRollRev 0.3s infinite linear;
+    }
+
+    @keyframes wheelRollFwd {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+      100% { transform: translateY(0); }
+    }
+    @keyframes wheelRollRev {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(3px); }
+      100% { transform: translateY(0); }
+    }
+
+    /* Left Wheel Bank */
+    .wh-fl { top: 22px; left: calc(50% - 72px); }
+    .wh-ml { top: 76px; left: calc(50% - 72px); }
+    .wh-rl { bottom: 22px; left: calc(50% - 72px); }
+
+    /* Right Wheel Bank */
+    .wh-fr { top: 22px; right: calc(50% - 72px); }
+    .wh-mr { top: 76px; right: calc(50% - 72px); }
+    .wh-rr { bottom: 22px; right: calc(50% - 72px); }
+
+    /* Driving Control Modes: Hold-to-Move vs Click-to-Toggle */
+    .drive-mode-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      margin-bottom: 12px;
+    }
+
+    .mode-toggle-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mode-chip {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 800;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-chip.active {
+      background: rgba(0, 240, 255, 0.2);
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+    }
+
+    /* Driving Touch Gamepad */
+    .gamepad-deck {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .pad-cluster {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-touch-drive {
+      width: 100%;
+      height: 58px;
+      background: linear-gradient(180deg, #1b263b 0%, #0f172a 100%);
+      border: 1.5px solid #334155;
+      border-radius: var(--radius-md);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      transition: all 0.1s ease;
+    }
+
+    .btn-touch-drive svg {
+      width: 20px;
+      height: 20px;
+      fill: #cbd5e1;
+    }
+
+    .btn-touch-drive span {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-touch-drive:active,
+    .btn-touch-drive.active {
+      transform: scale(0.94);
+      background: linear-gradient(180deg, rgba(0, 240, 255, 0.25) 0%, rgba(14, 165, 233, 0.35) 100%);
+      border-color: var(--neon-cyan);
+      box-shadow: var(--glow-cyan);
+      color: var(--neon-cyan);
+    }
+    .btn-touch-drive:active svg,
+    .btn-touch-drive.active svg { fill: var(--neon-cyan); }
+
+    .center-safety-core {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-rover-stop {
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(185, 28, 28, 0.4) 100%);
+      border: 3px solid var(--neon-crimson);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--glow-red);
+      transition: all 0.15s ease;
+    }
+
+    .btn-rover-stop svg {
+      width: 24px;
+      height: 24px;
+      fill: #fff;
+    }
+
+    .btn-rover-stop span {
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    .btn-rover-stop:active {
+      transform: scale(0.92);
+      background: var(--neon-crimson);
+    }
+
+    .btn-duo-row {
+      display: flex;
+      width: 100%;
+      gap: 8px;
+    }
+
+    .btn-duo-row .btn-touch-drive {
+      height: 52px;
+    }
+
+    /* Speed Throttle Slider */
+    .throttle-container {
+      background: rgba(7, 12, 22, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .throttle-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .custom-range-slider {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #10b981 0%, #38bdf8 50%, #f59e0b 80%, #ef4444 100%);
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .custom-range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3px solid var(--neon-cyan);
+      box-shadow: 0 0 10px var(--neon-cyan);
+      cursor: pointer;
+    }
+
+    .preset-pills-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .pill-mode-btn {
+      padding: 8px 6px;
+      background: rgba(22, 34, 57, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .pill-mode-btn.active {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(56, 189, 248, 0.1));
+      border-color: var(--neon-cyan);
+      color: #fff;
+      box-shadow: var(--glow-cyan);
+    }
+
+    /* Aux Subsystems */
+    .subsystem-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .action-toggle-card {
+      background: rgba(14, 22, 37, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-toggle-card svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-secondary);
+    }
+
+    .action-toggle-card span {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .action-toggle-card.active-light {
+      border-color: #facc15;
+      background: rgba(250, 204, 21, 0.18);
+    }
+    .action-toggle-card.active-light svg { fill: #facc15; }
+    .action-toggle-card.active-light span { color: #fef08a; }
+
+    .action-toggle-card.active-beacon {
+      border-color: var(--neon-crimson);
+      background: rgba(239, 68, 68, 0.18);
+    }
+    .action-toggle-card.active-beacon svg { fill: var(--neon-crimson); }
+    .action-toggle-card.active-beacon span { color: #fca5a5; }
+
+    /* =========================================================================
+       ROBOTIC ARM 6-DOF STYLING
+       ========================================================================= */
+    .arm-global-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(11, 18, 32, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .arm-tools-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .arm-tools-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-arm-action {
+      padding: 7px 14px;
+      background: rgba(22, 34, 57, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-arm-action svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .btn-arm-action.home-btn {
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+      background: rgba(0, 240, 255, 0.12);
+    }
+    .btn-arm-action.home-btn:hover {
+      background: rgba(0, 240, 255, 0.25);
+      box-shadow: var(--glow-cyan);
+    }
+
+    .btn-arm-action.freeze-btn {
+      border-color: var(--neon-crimson);
+      color: #fca5a5;
+      background: rgba(239, 68, 68, 0.15);
+    }
+    .btn-arm-action.freeze-btn:hover {
+      background: rgba(239, 68, 68, 0.3);
+      box-shadow: var(--glow-red);
+    }
+
+    .servo-cards-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 680px) {
+      .servo-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .servo-card {
+      background: rgba(11, 18, 32, 0.75);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .servo-card.command-accepted {
+      border-color: var(--neon-emerald);
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
+    }
+
+    .servo-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .servo-title-group h4 {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .servo-channel-badge {
+      font-size: 9px;
+      font-family: monospace;
+      padding: 1px 6px;
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--neon-cyan);
+      border-radius: 4px;
+      border: 1px solid rgba(0, 240, 255, 0.3);
+    }
+
+    .servo-model-tag {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .servo-angle-badge {
+      text-align: right;
+    }
+
+    .angle-value-huge {
+      font-family: monospace;
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+    }
+
+    .angle-feedback-note {
+      font-size: 8px;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+    }
+
+    .servo-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slider-limit-label {
+      font-size: 10px;
+      font-family: monospace;
+      color: var(--text-muted);
+      min-width: 28px;
+    }
+
+    .arm-range-slider {
+      flex: 1;
+      height: 8px;
+      border-radius: 4px;
+      background: #1e293b;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .arm-range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid var(--neon-blue);
+      box-shadow: 0 0 10px var(--neon-blue);
+      cursor: pointer;
+    }
+
+    .servo-nudge-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-nudge {
+      padding: 4px 8px;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: monospace;
+      transition: all 0.15s;
+    }
+
+    .btn-nudge:hover {
+      color: #fff;
+      border-color: var(--neon-cyan);
+    }
+
+    .btn-servo-center {
+      padding: 4px 10px;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      border-radius: 4px;
+      color: var(--neon-cyan);
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Preset & Sequencer Panel */
+    .presets-deck {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .presets-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    @media (min-width: 600px) {
+      .presets-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .preset-card-btn {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .preset-card-btn:hover {
+      border-color: var(--neon-cyan);
+      background: rgba(0, 240, 255, 0.1);
+    }
+
+    .preset-name {
+      font-size: 11px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .preset-desc {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Live Event Terminal */
+    .terminal-container {
+      background: #030712;
+      border: 1px solid #1f2937;
+      border-radius: var(--radius-sm);
+      height: 120px;
+      overflow-y: auto;
+      padding: 8px 10px;
+      font-family: monospace;
+      font-size: 10.5px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .terminal-row {
+      display: flex;
+      gap: 6px;
+      color: var(--text-secondary);
+      line-height: 1.3;
+    }
+
+    .terminal-time {
+      color: var(--neon-cyan);
+      opacity: 0.8;
+    }
+
+    .terminal-row.warn {
+      color: var(--neon-amber);
+    }
+
+    .terminal-row.danger {
+      color: var(--neon-crimson);
+    }
+
+    /* Modal Instructions Popup */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(4, 7, 14, 0.88);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 16px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #0f172a;
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius-lg);
+      max-width: 520px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      color: var(--text-primary);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+    }
+
+    .modal-head h3 {
+      font-size: 15px;
+      color: var(--neon-cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .modal-body ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .modal-body li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.4;
+    }
+
+    .key-badge {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      font-size: 10px;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 12px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top HUD Mission Control Bar -->
+  <header>
+    <div class="brand-section">
+      <div class="brand-badge">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.8L19.2 8 12 11.6 4.8 8 12 4.8zM4 9.6l7 3.5v6.5l-7-3.5V9.6zm9 10v-6.5l7-3.5v6.5l-7 3.5z"/></svg>
+      </div>
+      <div class="brand-text">
+        <h1>ARES <span>CONTROL</span></h1>
+        <p>Autonomous Response & Exploration System</p>
+      </div>
+    </div>
+
+    <div class="hud-controls-group">
+      <!-- ESP32 Rover Capsule -->
+      <div class="capsule" id="capsuleRover" title="ESP32 Rover Teleoperation Link">
+        <div class="pulse-dot" id="pulseDotRover"></div>
+        <span>ROVER: <strong id="roverConnText">ONLINE</strong></span>
+      </div>
+
+      <!-- ESP8266 Arm Capsule -->
+      <div class="capsule" id="capsuleArm" title="ESP8266 Robotic Arm Link">
+        <div class="pulse-dot" id="pulseDotArm"></div>
+        <span>ARM: <strong id="armConnText">SEARCHING</strong></span>
+      </div>
+
+      <!-- Power Telemetry -->
+      <div class="capsule" title="Power Supply (Voltage divider sensor)">
+        <span style="color: #facc15;">⚡</span>
+        <span id="battDisplay">11.8 V (SIM)</span>
+      </div>
+
+      <!-- MASTER EMERGENCY STOP -->
+      <button class="btn-header-estop" id="btnMasterEStop" onclick="triggerMasterEmergencyStop()" title="HALT ALL: Stops Rover Drive and Arm Motion Immediately">
+        <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+        <span>E-STOP</span>
+      </button>
+
+      <button class="btn-help-icon" id="openHelpModal" title="Operator Guide">?</button>
+    </div>
+  </header>
+
+  <!-- Subsystem View Nav Bar -->
+  <nav class="subsystem-nav">
+    <button class="nav-tab-btn active" id="tabNavRover" onclick="switchSubsystemView('rover')">
+      <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+      ROVER CHASSIS & DRIVE
+    </button>
+    <button class="nav-tab-btn" id="tabNavArm" onclick="switchSubsystemView('arm')">
+      <svg viewBox="0 0 24 24"><path d="M22 9h-4.79l-4.38-6.56c-.19-.28-.51-.44-.83-.44s-.64.16-.83.44L6.79 9H2c-.55 0-1 .45-1 1s.45 1 1 1h3.21l3.79 5.68V21c0 .55.45 1 1 1s1-.45 1-1v-4.32l3.79-5.68H22c.55 0 1-.45 1-1s-.45-1-1-1z"/></svg>
+      ROBOTIC ARM (6-DOF)
+    </button>
+    <button class="nav-tab-btn" id="tabNavSplit" onclick="switchSubsystemView('split')">
+      <svg viewBox="0 0 24 24"><path d="M4 3h7v18H4V3zm9 0h7v18h-7V3z"/></svg>
+      COMMAND SPLIT VIEW
+    </button>
+  </nav>
+
+  <main id="mainGrid">
+
+    <!-- =======================================================================
+         1. ROVER DRIVE SUBSYSTEM VIEW
+         ======================================================================= -->
+    <div class="subsystem-view" id="viewRover">
+      <div class="card-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg style="width:14px;height:14px;fill:var(--neon-cyan);" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            Chassis Telemetry & Kinematics
+          </div>
+          <div class="panel-tag" id="sessionTimer">UP: 00:00:00</div>
+        </div>
+
+        <div class="stats-trio">
+          <div class="stat-card">
+            <div class="stat-card-label">DRIVE STATE</div>
+            <div class="stat-card-value" id="dispDriveState" style="color: var(--neon-cyan);">IDLE</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">THROTTLE</div>
+            <div class="stat-card-value" id="dispSpeedPercent">63%</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">WATCHDOG</div>
+            <div class="stat-card-value" id="dispWatchdog" style="color: var(--neon-emerald);">ACTIVE</div>
+          </div>
+        </div>
+
+        <!-- 6-Wheel Dynamic Chassis Map -->
+        <div class="chassis-container">
+          <div class="wheel-unit wh-fl" id="wh-m1" title="Front Left (M1)"></div>
+          <div class="wheel-unit wh-fr" id="wh-m2" title="Front Right (M2)"></div>
+          <div class="wheel-unit wh-ml" id="wh-m3" title="Middle Left (M3)"></div>
+          <div class="wheel-unit wh-mr" id="wh-m4" title="Middle Right (M4)"></div>
+          <div class="wheel-unit wh-rl" id="wh-m5" title="Rear Left (M5)"></div>
+          <div class="wheel-unit wh-rr" id="wh-m6" title="Rear Right (M6)"></div>
+
+          <div class="rover-hull" id="roverHull">
+            <div class="hull-heading-arrow" id="headingArrow">▲</div>
+            <div class="hull-label">ARES-6W</div>
+          </div>
+        </div>
+
+        <!-- Drive Mode Switcher (Hold-to-move vs Click-to-toggle) -->
+        <div class="drive-mode-bar">
+          <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">CONTROL MODE:</span>
+          <div class="mode-toggle-group">
+            <button class="mode-chip active" id="chipHoldMode" onclick="setDriveControlMode('hold')" title="Release stops movement immediately">HOLD-TO-MOVE</button>
+            <button class="mode-chip" id="chipToggleMode" onclick="setDriveControlMode('toggle')" title="Runs until next command or stop">CLICK-TO-TOGGLE</button>
+          </div>
+        </div>
+
+        <!-- Dual-Thumb Touch Gamepad -->
+        <div class="gamepad-deck">
+          <!-- Left Axis: Forward & Reverse -->
+          <div class="pad-cluster">
+            <button class="btn-touch-drive btn-rover-node" data-cmd="w" id="btn-w" title="Drive Forward (W)">
+              <svg viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
+              <span>FORWARD</span>
+            </button>
+            <button class="btn-touch-drive btn-rover-node" data-cmd="s" id="btn-s" title="Drive Reverse (S)">
+              <svg viewBox="0 0 24 24"><path d="M12 20l8-8h-5V4h-6v8H4z"/></svg>
+              <span>REVERSE</span>
+            </button>
+          </div>
+
+          <!-- Center STOP -->
+          <div class="center-safety-core">
+            <button class="btn-rover-stop btn-rover-node" data-cmd="x" id="btn-rover-stop" title="Stop Motors (Space)">
+              <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+              <span>STOP</span>
+            </button>
+            <button class="pill-mode-btn" onclick="triggerDynamicBrake()" style="padding: 4px 10px; font-size: 9px;">BRAKE</button>
+          </div>
+
+          <!-- Right Axis: Steering & Spin -->
+          <div class="pad-cluster">
+            <div class="btn-duo-row">
+              <button class="btn-touch-drive btn-rover-node" data-cmd="a" id="btn-a" title="Spin Left (A)">
+                <svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05 1-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+                <span>SPIN L</span>
+              </button>
+              <button class="btn-touch-drive btn-rover-node" data-cmd="d" id="btn-d" title="Spin Right (D)">
+                <svg viewBox="0 0 24 24"><path d="M11.5 8c2.65 0 5.05 1 6.9 2.6L22 7v9h-9l3.62-3.62c-1.39-1.16-3.16-1.88-5.12-1.88-3.54 0-6.55 2.31-7.6 5.5l-2.37-.78C2.92 11.03 6.85 8 11.5 8z"/></svg>
+                <span>SPIN R</span>
+              </button>
+            </div>
+            <div class="btn-duo-row">
+              <button class="btn-touch-drive btn-rover-node" data-cmd="q" id="btn-q" title="Pivot Left (Q)">
+                <svg viewBox="0 0 24 24"><path d="M19 15l-6 6-1.42-1.42L15.17 16H4V4h2v10h9.17l-3.59-3.58L13 9l6 6z"/></svg>
+                <span>PIVOT L</span>
+              </button>
+              <button class="btn-touch-drive btn-rover-node" data-cmd="e" id="btn-e" title="Pivot Right (E)">
+                <svg viewBox="0 0 24 24"><path d="M5 15l6 6 1.42-1.42L8.83 16H20V4h-2v10H8.83l3.59-3.58L11 9 5 15z"/></svg>
+                <span>PIVOT R</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Variable Throttle Speed Control -->
+        <div class="throttle-container">
+          <div class="throttle-header">
+            <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">ROVER DRIVE SPEED:</span>
+            <span style="font-family: monospace; font-size: 12px; font-weight: 800; color: var(--neon-cyan);" id="lblThrottleVal">160 / 255 (63%)</span>
+          </div>
+          <input type="range" min="90" max="255" value="160" class="custom-range-slider" id="throttleSlider">
+
+          <div class="preset-pills-row">
+            <button class="pill-mode-btn" onclick="applyThrottlePreset(105, this)">🐢 CRAWL (41%)</button>
+            <button class="pill-mode-btn active" onclick="applyThrottlePreset(160, this)">⚡ CRUISE (63%)</button>
+            <button class="pill-mode-btn" onclick="applyThrottlePreset(255, this)">🚀 TURBO (100%)</button>
+          </div>
+        </div>
+
+        <!-- Auxiliary Toggles -->
+        <div class="subsystem-grid">
+          <div class="action-toggle-card" id="cardHeadlights" onclick="toggleHeadlights()">
+            <svg viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-1.3l-.85-.6A5.003 5.003 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>
+            <span id="lblLightState">HEADLIGHTS</span>
+          </div>
+          <div class="action-toggle-card" id="cardBeacon" onclick="toggleRescueBeacon()">
+            <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+            <span id="lblBeaconState">BEACON / SIREN</span>
+          </div>
+          <div class="action-toggle-card" id="cardDiagnostics" onclick="triggerRoverDiagnostics()">
+            <svg viewBox="0 0 24 24"><path d="M22 9h-4.79l-4.38-6.56c-.19-.28-.51-.44-.83-.44s-.64.16-.83.44L6.79 9H2c-.55 0-1 .45-1 1s.45 1 1 1h3.21l3.79 5.68V21c0 .55.45 1 1 1s1-.45 1-1v-4.32l3.79-5.68H22c.55 0 1-.45 1-1s-.45-1-1-1z"/></svg>
+            <span>DIAGNOSTIC TEST</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =======================================================================
+         2. ROBOTIC ARM 6-DOF SUBSYSTEM VIEW
+         ======================================================================= -->
+    <div class="subsystem-view" id="viewArm">
+      <div class="card-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg style="width:14px;height:14px;fill:var(--neon-purple);" viewBox="0 0 24 24"><path d="M22 9h-4.79l-4.38-6.56c-.19-.28-.51-.44-.83-.44s-.64.16-.83.44L6.79 9H2c-.55 0-1 .45-1 1s.45 1 1 1h3.21l3.79 5.68V21c0 .55.45 1 1 1s1-.45 1-1v-4.32l3.79-5.68H22c.55 0 1-.45 1-1s-.45-1-1-1z"/></svg>
+            6-DOF Articulated Robotic Arm Control (ESP8266 + PCA9685)
+          </div>
+          <div class="panel-tag" id="armMotionTag">STATUS: READY</div>
+        </div>
+
+        <!-- Arm Global Toolbar -->
+        <div class="arm-global-toolbar">
+          <div class="arm-tools-left">
+            <button class="btn-arm-action home-btn" onclick="commandArmHome()" title="Smoothly return all joints to safe HOME position">
+              <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+              <span>ARM HOME</span>
+            </button>
+            <button class="btn-arm-action freeze-btn" onclick="commandArmFreeze()" title="Instantly freeze arm movement while keeping holding torque">
+              <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+              <span>FREEZE ARM</span>
+            </button>
+          </div>
+
+          <div class="arm-tools-right">
+            <span style="font-size: 10px; font-weight: 700; color: var(--text-secondary);">SPEED:</span>
+            <button class="mode-chip" onclick="setArmSpeed(25, this)">SLOW</button>
+            <button class="mode-chip active" onclick="setArmSpeed(45, this)">NORMAL</button>
+            <button class="mode-chip" onclick="setArmSpeed(90, this)">FAST</button>
+          </div>
+        </div>
+
+        <!-- 6 Independent Servo Cards -->
+        <div class="servo-cards-grid" id="servoCardsGrid">
+          <!-- Dynamically populated / defined below -->
+        </div>
+
+        <!-- Presets & Sequence Manager -->
+        <div class="presets-deck">
+          <div class="panel-header" style="margin-top: 10px; margin-bottom: 6px;">
+            <div class="panel-title" style="font-size: 11px;">
+              Configurable Poses & Sequences
+            </div>
+            <button class="btn-nudge" onclick="saveCurrentPoseAsPreset()" style="color: var(--neon-cyan);">+ SAVE CURRENT POSE</button>
+          </div>
+
+          <div class="presets-grid" id="presetsGrid">
+            <!-- Dynamically populated -->
+          </div>
+
+          <!-- Macro Sequencer Bar -->
+          <div class="drive-mode-bar" style="margin-top: 10px;">
+            <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">SEQUENCE MACRO:</span>
+            <div style="display: flex; gap: 8px;">
+              <button class="pill-mode-btn" onclick="runInspectionDemoSequence()" style="color: var(--neon-cyan);">▶ RUN DEMO</button>
+              <button class="pill-mode-btn" onclick="stopActiveSequence()" style="color: var(--neon-crimson);">⏹ STOP SEQUENCE</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Event Terminal (Spans across bottom) -->
+    <div class="card-panel" style="grid-column: 1 / -1;">
+      <div class="panel-header" style="margin-bottom: 8px;">
+        <div class="panel-title" style="font-size: 11px;">
+          MISSION EVENT LOG & TELEMETRY
+        </div>
+        <div class="panel-tag" id="pingIndicator">PING: -- ms</div>
+      </div>
+      <div class="terminal-container" id="terminalBox">
+        <div class="terminal-row">
+          <span class="terminal-time">[INIT]</span>
+          <span>ARES Autonomous Command Dashboard online and ready.</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    ARES // Autonomous Response & Exploration System • Dual Microcontroller Architecture (ESP32 + ESP8266)
+  </footer>
+
+  <!-- Quick Operator Handbook Modal -->
+  <div class="modal-overlay" id="helpModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>
+          <svg style="width:18px;height:18px;fill:var(--neon-cyan);" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+          ARES Rover & Arm Operator's Handbook
+        </h3>
+        <button class="modal-close-btn" id="closeHelpModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <ul>
+          <li>
+            <span class="key-badge">E-STOP</span>
+            <span><strong>Master Emergency Stop:</strong> Red header button immediately halts Rover drive motors AND freezes all Arm servo motion.</span>
+          </li>
+          <li>
+            <span class="key-badge">W, A, S, D</span>
+            <span>Keyboard rover teleop: <strong>W</strong> (Forward), <strong>S</strong> (Reverse), <strong>A</strong> (Spin Left), <strong>D</strong> (Spin Right), <strong>SPACE</strong> (Halt).</span>
+          </li>
+          <li>
+            <span class="key-badge">HOLD / TOGGLE</span>
+            <span>Switch between <strong>Hold-to-Move</strong> (safest, stops on button release) and <strong>Click-to-Toggle</strong> (continues till stop).</span>
+          </li>
+          <li>
+            <span class="key-badge">ARM LIMITS</span>
+            <span>All 6 servos enforce conservative min/max angle limits. Angles shown are <strong>commanded open-loop angles</strong>.</span>
+          </li>
+          <li>
+            <span class="key-badge">FAILSAFE</span>
+            <span>If communication drops for over 1.5 seconds, the ESP32 safety watchdog halts drive motors automatically.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==============================================================================
+     * ARES MISSION CONTROL - Unified Teleoperation Engine
+     * ============================================================================== */
+
+    // Servo Definitions with conservative limits
+    const DEFAULT_SERVOS = [
+      { id: 1, channel: 0, name: "Base Turret",    model: "MG996R", min: 10, max: 170, home: 90, angle: 90 },
+      { id: 2, channel: 1, name: "Shoulder Pitch", model: "MG996R", min: 20, max: 160, home: 90, angle: 90 },
+      { id: 3, channel: 2, name: "Elbow Pitch",    model: "MG996R", min: 20, max: 160, home: 90, angle: 90 },
+      { id: 4, channel: 3, name: "Wrist Pitch",    model: "SG90",   min: 15, max: 165, home: 90, angle: 90 },
+      { id: 5, channel: 4, name: "Wrist Roll",     model: "SG90",   min: 10, max: 170, home: 90, angle: 90 },
+      { id: 6, channel: 5, name: "Gripper Jaw",    model: "SG90",   min: 40, max: 135, home: 90, angle: 90 }
+    ];
+
+    // Presets list
+    const INITIAL_PRESETS = [
+      { name: "Home (Stowed)",    desc: "Safe neutral transit pose", angles: [90, 90, 90, 90, 90, 90] },
+      { name: "Reach Forward",    desc: "Extended arm horizontal",  angles: [90, 120, 60, 90, 90, 60] },
+      { name: "Raise Overhead",   desc: "Elevated high reach",      angles: [90, 140, 110, 90, 90, 60] },
+      { name: "Ground Scan",      desc: "Low angle surface inspect",angles: [90, 60, 120, 80, 90, 60] },
+      { name: "Grab Position",    desc: "Open jaw ready to clamp",  angles: [90, 110, 70, 90, 90, 130] },
+      { name: "Release Position", desc: "Release object",           angles: [90, 110, 70, 90, 90, 45] }
+    ];
+
+    let servos = JSON.parse(localStorage.getItem('ares_servos') || 'null') || DEFAULT_SERVOS;
+    let presets = JSON.parse(localStorage.getItem('ares_presets') || 'null') || INITIAL_PRESETS;
+
+    let currentSpeed = 160;
+    let activeRoverCommand = null;
+    let driveControlMode = 'hold'; // 'hold' or 'toggle'
+    let driveHeartbeatTimer = null;
+    let armSpeedDps = 45;
+    let lightActive = false;
+    let beaconActive = false;
+    let sequenceActive = false;
+    let sequenceTimeout = null;
+
+    let isMockMode = (location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+
+    // DOM Elements
+    const terminalBox = document.getElementById('terminalBox');
+    const dispDriveState = document.getElementById('dispDriveState');
+    const dispSpeedPercent = document.getElementById('dispSpeedPercent');
+    const dispWatchdog = document.getElementById('dispWatchdog');
+    const throttleSlider = document.getElementById('throttleSlider');
+    const lblThrottleVal = document.getElementById('lblThrottleVal');
+    const pulseDotRover = document.getElementById('pulseDotRover');
+    const roverConnText = document.getElementById('roverConnText');
+    const pulseDotArm = document.getElementById('pulseDotArm');
+    const armConnText = document.getElementById('armConnText');
+    const battDisplay = document.getElementById('battDisplay');
+    const sessionTimer = document.getElementById('sessionTimer');
+    const pingIndicator = document.getElementById('pingIndicator');
+    const roverHull = document.getElementById('roverHull');
+    const headingArrow = document.getElementById('headingArrow');
+    const armMotionTag = document.getElementById('armMotionTag');
+
+    function logTerminal(msg, tag = 'SYS', level = 'info') {
+      const row = document.createElement('div');
+      row.className = 'terminal-row ' + (level === 'warn' ? 'warn' : level === 'danger' ? 'danger' : '');
+      const time = new Date().toTimeString().split(' ')[0];
+      row.innerHTML = `<span class="terminal-time">[${time}]</span><span>[${tag}] ${msg}</span>`;
+      terminalBox.appendChild(row);
+      terminalBox.scrollTop = terminalBox.scrollHeight;
+    }
+
+    function triggerHaptic(duration = 20) {
+      if ('vibrate' in navigator) {
+        try { navigator.vibrate(duration); } catch(e) {}
+      }
+    }
+
+    // Subsystem View Navigation (Rover vs Arm vs Split)
+    function switchSubsystemView(view) {
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
+      const mainGrid = document.getElementById('mainGrid');
+      const viewRover = document.getElementById('viewRover');
+      const viewArm = document.getElementById('viewArm');
+
+      if (view === 'rover') {
+        document.getElementById('tabNavRover').classList.add('active');
+        mainGrid.classList.remove('layout-split');
+        viewRover.classList.remove('hidden');
+        viewArm.classList.add('hidden');
+      } else if (view === 'arm') {
+        document.getElementById('tabNavArm').classList.add('active');
+        mainGrid.classList.remove('layout-split');
+        viewRover.classList.add('hidden');
+        viewArm.classList.remove('hidden');
+      } else {
+        document.getElementById('tabNavSplit').classList.add('active');
+        mainGrid.classList.add('layout-split');
+        viewRover.classList.remove('hidden');
+        viewArm.classList.remove('hidden');
+      }
+    }
+
+    // Set Drive Control Mode (Hold-to-move vs Click-to-toggle)
+    function setDriveControlMode(mode) {
+      driveControlMode = mode;
+      document.getElementById('chipHoldMode').classList.toggle('active', mode === 'hold');
+      document.getElementById('chipToggleMode').classList.toggle('active', mode === 'toggle');
+      logTerminal(`Rover Drive Mode switched to: ${mode === 'hold' ? 'HOLD-TO-MOVE (Safest)' : 'CLICK-TO-TOGGLE'}`);
+      if (mode === 'hold' && activeRoverCommand) {
+        stopRoverMotion();
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // ROVER MOTION DISPATCHER
+    // -------------------------------------------------------------------------
+    function sendRoverCommand(cmd, spd = currentSpeed) {
+      if (isMockMode) {
+        simulateRoverState(cmd, spd);
+        return;
+      }
+      fetch(`/api/drive?cmd=${encodeURIComponent(cmd)}&spd=${spd}`)
+        .then(res => res.json())
+        .then(data => updateChassisVisuals(data))
+        .catch(err => {
+          pulseDotRover.className = 'pulse-dot offline';
+          roverConnText.textContent = 'LINK LOST';
+        });
+    }
+
+    function startRoverMotion(cmd) {
+      if (driveControlMode === 'toggle' && activeRoverCommand === cmd) {
+        // In toggle mode, pressing same direction again stops it
+        stopRoverMotion();
+        return;
+      }
+
+      activeRoverCommand = cmd;
+      triggerHaptic(25);
+      highlightRoverButtons(cmd, true);
+      sendRoverCommand(cmd);
+
+      // Heartbeat pulse every 250ms prevents Watchdog Timeout on ESP32
+      clearInterval(driveHeartbeatTimer);
+      driveHeartbeatTimer = setInterval(() => {
+        if (activeRoverCommand) {
+          sendRoverCommand(activeRoverCommand);
+        }
+      }, 250);
+    }
+
+    function stopRoverMotion() {
+      if (!activeRoverCommand) return;
+      highlightRoverButtons(activeRoverCommand, false);
+      activeRoverCommand = null;
+      clearInterval(driveHeartbeatTimer);
+      if (isMockMode) {
+        simulateRoverState('x', currentSpeed);
+      } else {
+        fetch('/api/stop').catch(() => {});
+      }
+    }
+
+    function triggerDynamicBrake() {
+      triggerHaptic(30);
+      if (isMockMode) {
+        simulateRoverState('b', currentSpeed);
+      } else {
+        sendRoverCommand('b');
+      }
+    }
+
+    function highlightRoverButtons(cmd, isActive) {
+      document.querySelectorAll(`[data-cmd="${cmd}"]`).forEach(btn => {
+        btn.classList.toggle('active', isActive);
+      });
+    }
+
+    // Attach Event Listeners to Rover driving controls
+    document.querySelectorAll('.btn-rover-node').forEach(btn => {
+      const cmd = btn.getAttribute('data-cmd');
+
+      // Mouse
+      btn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        if (cmd === 'x') {
+          stopRoverMotion();
+        } else {
+          startRoverMotion(cmd);
+        }
+      });
+
+      btn.addEventListener('mouseup', (e) => {
+        e.preventDefault();
+        if (driveControlMode === 'hold' && cmd !== 'x') {
+          stopRoverMotion();
+        }
+      });
+
+      btn.addEventListener('mouseleave', () => {
+        if (driveControlMode === 'hold' && activeRoverCommand === cmd) {
+          stopRoverMotion();
+        }
+      });
+
+      // Touch for mobile/tablet
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (cmd === 'x') {
+          stopRoverMotion();
+        } else {
+          startRoverMotion(cmd);
+        }
+      }, { passive: false });
+
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        if (driveControlMode === 'hold' && cmd !== 'x') {
+          stopRoverMotion();
+        }
+      }, { passive: false });
+
+      btn.addEventListener('touchcancel', () => {
+        if (driveControlMode === 'hold') stopRoverMotion();
+      });
+    });
+
+    // Keyboard Teleoperation (W, A, S, D, Q, E, Space)
+    const keyMap = {
+      'w': 'w', 'ArrowUp': 'w',
+      's': 's', 'ArrowDown': 's',
+      'a': 'a', 'ArrowLeft': 'a',
+      'd': 'd', 'ArrowRight': 'd',
+      'q': 'q', 'e': 'e',
+      ' ': 'x'
+    };
+
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      if (keyMap[e.key]) {
+        e.preventDefault();
+        const cmd = keyMap[e.key];
+        if (cmd === 'x') {
+          stopRoverMotion();
+        } else {
+          startRoverMotion(cmd);
+        }
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (keyMap[e.key]) {
+        if (driveControlMode === 'hold') {
+          stopRoverMotion();
+        }
+      }
+    });
+
+    // Throttle Slider
+    throttleSlider.addEventListener('input', (e) => {
+      currentSpeed = parseInt(e.target.value);
+      updateThrottleLabel(currentSpeed);
+      document.querySelectorAll('.preset-pills-row .pill-mode-btn').forEach(p => p.classList.remove('active'));
+      if (!isMockMode) fetch(`/api/speed?val=${currentSpeed}`);
+    });
+
+    function applyThrottlePreset(val, btnElem) {
+      currentSpeed = val;
+      throttleSlider.value = val;
+      updateThrottleLabel(val);
+      document.querySelectorAll('.preset-pills-row .pill-mode-btn').forEach(p => p.classList.remove('active'));
+      if (btnElem) btnElem.classList.add('active');
+      triggerHaptic(15);
+      if (!isMockMode) fetch(`/api/speed?val=${currentSpeed}`);
+      logTerminal(`Rover throttle preset: ${Math.round((val/255)*100)}%`);
+    }
+
+    function updateThrottleLabel(val) {
+      const pct = Math.round((val / 255) * 100);
+      lblThrottleVal.textContent = `${val} / 255 (${pct}%)`;
+      dispSpeedPercent.textContent = pct + '%';
+    }
+
+    function toggleHeadlights() {
+      lightActive = !lightActive;
+      triggerHaptic(20);
+      document.getElementById('cardHeadlights').classList.toggle('active-light', lightActive);
+      document.getElementById('lblLightState').textContent = `HEADLIGHTS: ${lightActive ? 'ON' : 'OFF'}`;
+      if (!isMockMode) fetch(`/api/aux?item=light&state=${lightActive ? 1 : 0}`);
+      logTerminal(`Headlights ${lightActive ? 'ON' : 'OFF'}`);
+    }
+
+    function toggleRescueBeacon() {
+      beaconActive = !beaconActive;
+      triggerHaptic(30);
+      document.getElementById('cardBeacon').classList.toggle('active-beacon', beaconActive);
+      document.getElementById('lblBeaconState').textContent = `BEACON: ${beaconActive ? 'ON' : 'OFF'}`;
+      if (!isMockMode) fetch(`/api/aux?item=beacon&state=${beaconActive ? 1 : 0}`);
+      logTerminal(`Rescue Beacon ${beaconActive ? 'ENGAGED' : 'STANDBY'}`);
+    }
+
+    function triggerRoverDiagnostics() {
+      triggerHaptic(50);
+      logTerminal('Launching Rover hardware self-test...', 'TEST');
+      sendRoverCommand('t');
+    }
+
+    // Chassis Animation Map
+    function updateChassisVisuals(data) {
+      if (!data) return;
+      const state = data.state || 'IDLE';
+      dispDriveState.textContent = state;
+
+      if (state === 'FORWARD') {
+        headingArrow.textContent = '▲';
+        roverHull.style.transform = 'translateY(-6px)';
+      } else if (state === 'REVERSE') {
+        headingArrow.textContent = '▼';
+        roverHull.style.transform = 'translateY(6px)';
+      } else if (state === 'ROTATE_LEFT' || state === 'SPIN_LEFT') {
+        headingArrow.textContent = '↺';
+        roverHull.style.transform = 'rotate(-8deg)';
+      } else if (state === 'ROTATE_RIGHT' || state === 'SPIN_RIGHT') {
+        headingArrow.textContent = '↻';
+        roverHull.style.transform = 'rotate(8deg)';
+      } else if (state === 'TURN_LEFT') {
+        headingArrow.textContent = '↰';
+        roverHull.style.transform = 'rotate(-4deg)';
+      } else if (state === 'TURN_RIGHT') {
+        headingArrow.textContent = '↱';
+        roverHull.style.transform = 'rotate(4deg)';
+      } else {
+        headingArrow.textContent = '■';
+        roverHull.style.transform = 'none';
+      }
+
+      const leftFwd = (state === 'FORWARD' || state === 'TURN_RIGHT' || state === 'ROTATE_RIGHT');
+      const leftRev = (state === 'REVERSE' || state === 'ROTATE_LEFT');
+      const rightFwd = (state === 'FORWARD' || state === 'TURN_LEFT' || state === 'ROTATE_LEFT');
+      const rightRev = (state === 'REVERSE' || state === 'ROTATE_RIGHT');
+
+      ['m1', 'm3', 'm5'].forEach(id => {
+        const el = document.getElementById('wh-' + id);
+        if (el) el.className = 'wheel-unit wh-' + (id==='m1'?'fl':id==='m3'?'ml':'rl') + (leftFwd ? ' active-fwd' : '') + (leftRev ? ' active-rev' : '');
+      });
+
+      ['m2', 'm4', 'm6'].forEach(id => {
+        const el = document.getElementById('wh-' + id);
+        if (el) el.className = 'wheel-unit wh-' + (id==='m2'?'fr':id==='m4'?'mr':'rr') + (rightFwd ? ' active-fwd' : '') + (rightRev ? ' active-rev' : '');
+      });
+    }
+
+    function simulateRoverState(cmd, spd) {
+      const stateMap = {
+        'w': 'FORWARD', 's': 'REVERSE', 'a': 'ROTATE_LEFT', 'd': 'ROTATE_RIGHT',
+        'q': 'TURN_LEFT', 'e': 'TURN_RIGHT', 'x': 'IDLE', 'b': 'BRAKED', 't': 'SELF_TEST'
+      };
+      const st = stateMap[cmd] || 'IDLE';
+      updateChassisVisuals({ state: st, speed: spd });
+      if (cmd !== 'x') logTerminal(`Drive executed: [${st}] at ${Math.round((spd/255)*100)}% throttle`, 'ROVER');
+    }
+
+    // -------------------------------------------------------------------------
+    // MASTER ALL-STOP EMERGENCY STOP
+    // -------------------------------------------------------------------------
+    function triggerMasterEmergencyStop() {
+      triggerHaptic(100);
+      logTerminal('CRITICAL: MASTER EMERGENCY STOP ACTIVATED!', 'SAFETY', 'danger');
+
+      // 1. Halt Rover immediately
+      stopRoverMotion();
+
+      // 2. Freeze Arm
+      commandArmFreeze();
+
+      // 3. Dispatch to ESP32 Gateway
+      if (!isMockMode) {
+        fetch('/api/emergency_stop', { method: 'POST' }).catch(() => {});
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // ROBOTIC ARM 6-DOF CONTROLS
+    // -------------------------------------------------------------------------
+    function renderServoCards() {
+      const grid = document.getElementById('servoCardsGrid');
+      grid.innerHTML = '';
+
+      servos.forEach((s, idx) => {
+        const card = document.createElement('div');
+        card.className = 'servo-card';
+        card.id = `servo-card-${s.id}`;
+        card.innerHTML = `
+          <div class="servo-card-head">
+            <div class="servo-title-group">
+              <h4>Servo ${s.id}: ${s.name} <span class="servo-channel-badge">Ch ${s.channel}</span></h4>
+              <div class="servo-model-tag">${s.model} • Safe Range: ${s.min}° - ${s.max}°</div>
+            </div>
+            <div class="servo-angle-badge">
+              <div class="angle-value-huge" id="lbl-angle-${s.id}">${Number(s.angle).toFixed(1)}°</div>
+              <div class="angle-feedback-note">Commanded Angle</div>
+            </div>
+          </div>
+
+          <div class="servo-slider-row">
+            <span class="slider-limit-label">${s.min}°</span>
+            <input type="range" min="${s.min}" max="${s.max}" value="${s.angle}" step="1"
+                   class="arm-range-slider" id="slider-servo-${s.id}"
+                   oninput="onServoSliderInput(${s.id}, this.value)"
+                   onchange="commitServoAngle(${s.id}, this.value)">
+            <span class="slider-limit-label" style="text-align:right;">${s.max}°</span>
+          </div>
+
+          <div class="servo-nudge-toolbar">
+            <button class="btn-nudge" onclick="nudgeServo(${s.id}, -5)">-5°</button>
+            <button class="btn-nudge" onclick="nudgeServo(${s.id}, -1)">-1°</button>
+            <button class="btn-servo-center" onclick="centerIndividualServo(${s.id})">CENTER (${s.home}°)</button>
+            <button class="btn-nudge" onclick="nudgeServo(${s.id}, +1)">+1°</button>
+            <button class="btn-nudge" onclick="nudgeServo(${s.id}, +5)">+5°</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function onServoSliderInput(id, val) {
+      document.getElementById(`lbl-angle-${id}`).textContent = Number(val).toFixed(1) + '°';
+      const servo = servos.find(s => s.id === id);
+      if (servo) servo.angle = parseFloat(val);
+    }
+
+    let servoSendThrottle = {};
+    function commitServoAngle(id, val) {
+      const angle = parseFloat(val);
+      const servo = servos.find(s => s.id === id);
+      if (servo) servo.angle = angle;
+      saveServosToStorage();
+
+      flashServoCardAccepted(id);
+      logTerminal(`Servo ${id} (${servo.name}) commanded to ${angle}°`, 'ARM');
+
+      if (isMockMode) return;
+
+      // Throttle rapid network bursts
+      clearTimeout(servoSendThrottle[id]);
+      servoSendThrottle[id] = setTimeout(() => {
+        fetch(`/api/arm/servo?id=${id}&angle=${angle}&spd=${armSpeedDps}`, { method: 'POST' })
+          .then(res => res.json())
+          .then(data => {
+            flashServoCardAccepted(id);
+          })
+          .catch(err => {
+            logTerminal(`Arm Servo ${id} command communication failed`, 'ARM', 'warn');
+          });
+      }, 30);
+    }
+
+    function nudgeServo(id, delta) {
+      const servo = servos.find(s => s.id === id);
+      if (!servo) return;
+      let newAngle = constrainVal(servo.angle + delta, servo.min, servo.max);
+      servo.angle = newAngle;
+      document.getElementById(`slider-servo-${id}`).value = newAngle;
+      document.getElementById(`lbl-angle-${id}`).textContent = Number(newAngle).toFixed(1) + '°';
+      commitServoAngle(id, newAngle);
+      triggerHaptic(15);
+    }
+
+    function centerIndividualServo(id) {
+      const servo = servos.find(s => s.id === id);
+      if (!servo) return;
+      servo.angle = servo.home;
+      document.getElementById(`slider-servo-${id}`).value = servo.home;
+      document.getElementById(`lbl-angle-${id}`).textContent = Number(servo.home).toFixed(1) + '°';
+      commitServoAngle(id, servo.home);
+      triggerHaptic(20);
+    }
+
+    function commandArmHome() {
+      triggerHaptic(30);
+      logTerminal('Returning all 6 joints to safe HOME position...', 'ARM');
+      servos.forEach(s => {
+        s.angle = s.home;
+        const slider = document.getElementById(`slider-servo-${s.id}`);
+        if (slider) slider.value = s.home;
+        const lbl = document.getElementById(`lbl-angle-${s.id}`);
+        if (lbl) lbl.textContent = Number(s.home).toFixed(1) + '°';
+      });
+      saveServosToStorage();
+
+      if (!isMockMode) {
+        fetch(`/api/arm/home?spd=${armSpeedDps}`, { method: 'POST' }).catch(() => {});
+      }
+    }
+
+    function commandArmFreeze() {
+      triggerHaptic(35);
+      logTerminal('Arm motion FROZEN. Holding position under active torque.', 'ARM', 'warn');
+      if (!isMockMode) {
+        fetch('/api/arm/stop', { method: 'POST' }).catch(() => {});
+      }
+    }
+
+    function setArmSpeed(spd, btnElem) {
+      armSpeedDps = spd;
+      document.querySelectorAll('.arm-tools-right .mode-chip').forEach(c => c.classList.remove('active'));
+      if (btnElem) btnElem.classList.add('active');
+      logTerminal(`Arm motion speed set to ${spd}°/s`, 'ARM');
+    }
+
+    function flashServoCardAccepted(id) {
+      const card = document.getElementById(`servo-card-${id}`);
+      if (!card) return;
+      card.classList.add('command-accepted');
+      setTimeout(() => card.classList.remove('command-accepted'), 400);
+    }
+
+    function constrainVal(val, min, max) {
+      return Math.min(Math.max(val, min), max);
+    }
+
+    function saveServosToStorage() {
+      localStorage.setItem('ares_servos', JSON.stringify(servos));
+    }
+
+    // -------------------------------------------------------------------------
+    // PRESETS & SEQUENCE MACRO
+    // -------------------------------------------------------------------------
+    function renderPresetsGrid() {
+      const grid = document.getElementById('presetsGrid');
+      grid.innerHTML = '';
+
+      presets.forEach((p, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'preset-card-btn';
+        btn.onclick = () => applyPresetPose(idx);
+        btn.innerHTML = `
+          <div class="preset-name">${p.name}</div>
+          <div class="preset-desc">${p.desc}</div>
+        `;
+        grid.appendChild(btn);
+      });
+    }
+
+    function applyPresetPose(idx) {
+      const p = presets[idx];
+      if (!p) return;
+      triggerHaptic(30);
+      logTerminal(`Applying pose preset: [${p.name}]`, 'ARM');
+
+      p.angles.forEach((deg, sIdx) => {
+        if (servos[sIdx]) {
+          servos[sIdx].angle = deg;
+          const slider = document.getElementById(`slider-servo-${servos[sIdx].id}`);
+          if (slider) slider.value = deg;
+          const lbl = document.getElementById(`lbl-angle-${servos[sIdx].id}`);
+          if (lbl) lbl.textContent = Number(deg).toFixed(1) + '°';
+        }
+      });
+      saveServosToStorage();
+
+      if (!isMockMode) {
+        // Send batch request to ESP32 arm gateway
+        let q = `spd=${armSpeedDps}`;
+        p.angles.forEach((deg, sIdx) => { q += `&s${sIdx+1}=${deg}`; });
+        fetch(`/api/arm/servos?${q}`, { method: 'POST' }).catch(() => {});
+      }
+    }
+
+    function saveCurrentPoseAsPreset() {
+      const name = prompt("Enter a name for this custom arm pose:", "Pose " + (presets.length + 1));
+      if (!name) return;
+      const currentAngles = servos.map(s => s.angle);
+      presets.push({
+        name: name,
+        desc: "Custom operator preset",
+        angles: currentAngles
+      });
+      localStorage.setItem('ares_presets', JSON.stringify(presets));
+      renderPresetsGrid();
+      logTerminal(`New arm preset saved: "${name}"`, 'ARM');
+    }
+
+    // Demo Sequence Player
+    function runInspectionDemoSequence() {
+      if (sequenceActive) return;
+      sequenceActive = true;
+      logTerminal('Starting automated demonstration sequence...', 'MACRO');
+
+      const stepOrder = [0, 1, 4, 5, 2, 0];
+      let stepIdx = 0;
+
+      function executeNextStep() {
+        if (!sequenceActive || stepIdx >= stepOrder.length) {
+          stopActiveSequence();
+          logTerminal('Macro sequence finished successfully.', 'MACRO');
+          return;
+        }
+
+        applyPresetPose(stepOrder[stepIdx]);
+        stepIdx++;
+        sequenceTimeout = setTimeout(executeNextStep, 2400);
+      }
+
+      executeNextStep();
+    }
+
+    function stopActiveSequence() {
+      sequenceActive = false;
+      clearTimeout(sequenceTimeout);
+      logTerminal('Active sequence halted.', 'MACRO', 'warn');
+    }
+
+    // -------------------------------------------------------------------------
+    // TELEMETRY & HARDWARE LIVENESS POLLING (350ms interval)
+    // -------------------------------------------------------------------------
+    setInterval(() => {
+      if (isMockMode) {
+        pingIndicator.textContent = 'PING: 1 ms (SIM)';
+        pulseDotRover.className = 'pulse-dot';
+        roverConnText.textContent = 'ONLINE (SIM)';
+        pulseDotArm.className = 'pulse-dot';
+        armConnText.textContent = 'LINKED (SIM)';
+        armMotionTag.textContent = 'ARM: SIMULATED';
+        return;
+      }
+
+      const t0 = performance.now();
+
+      // 1. Query Rover Status
+      fetch('/api/status')
+        .then(res => res.json())
+        .then(data => {
+          const t1 = performance.now();
+          pingIndicator.textContent = `PING: ${Math.round(t1 - t0)} ms`;
+          pulseDotRover.className = 'pulse-dot';
+          roverConnText.textContent = 'ONLINE';
+
+          if (data.uptime !== undefined) {
+            const sec = data.uptime;
+            const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+            const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+            const s = String(sec % 60).padStart(2, '0');
+            sessionTimer.textContent = `UP: ${h}:${m}:${s}`;
+          }
+
+          if (data.batt !== undefined) {
+            battDisplay.textContent = data.batt.toFixed(1) + ' V' + (data.batt_sim ? ' (SIM)' : '');
+          }
+
+          dispWatchdog.textContent = data.watchdog ? 'ACTIVE' : 'TRIGGERED';
+          dispWatchdog.style.color = data.watchdog ? 'var(--neon-emerald)' : 'var(--neon-crimson)';
+
+          // Arm connection state reported honestly by ESP32 Gateway
+          if (data.arm_online) {
+            pulseDotArm.className = 'pulse-dot';
+            armConnText.textContent = 'ONLINE';
+          } else {
+            pulseDotArm.className = 'pulse-dot offline';
+            armConnText.textContent = 'OFFLINE';
+          }
+
+          updateChassisVisuals(data);
+        })
+        .catch(err => {
+          pulseDotRover.className = 'pulse-dot offline';
+          roverConnText.textContent = 'RECONNECTING';
+        });
+
+      // 2. Query Arm Detailed Status via ESP32 proxy
+      fetch('/api/arm/status')
+        .then(res => res.json())
+        .then(armData => {
+          if (armData.status === 'ok' && armData.servos) {
+            pulseDotArm.className = 'pulse-dot';
+            armConnText.textContent = 'ONLINE';
+            armMotionTag.textContent = armData.moving ? 'ARM: MOVING' : (armData.frozen ? 'ARM: FROZEN' : 'ARM: IDLE');
+            armMotionTag.style.color = armData.moving ? 'var(--neon-cyan)' : 'var(--text-secondary)';
+
+            // Update commanded angles from ESP8266 controller if not actively dragging
+            armData.servos.forEach(s => {
+              const localServo = servos.find(ls => ls.id === s.id);
+              if (localServo && !servoSendThrottle[s.id]) {
+                localServo.angle = s.angle;
+                const lbl = document.getElementById(`lbl-angle-${s.id}`);
+                if (lbl) lbl.textContent = Number(s.angle).toFixed(1) + '°';
+              }
+            });
+          } else {
+            pulseDotArm.className = 'pulse-dot offline';
+            armConnText.textContent = 'DISCONNECTED';
+            armMotionTag.textContent = 'ARM: OFFLINE';
+          }
+        })
+        .catch(() => {
+          pulseDotArm.className = 'pulse-dot offline';
+          armConnText.textContent = 'OFFLINE';
+          armMotionTag.textContent = 'ARM: UNREACHABLE';
+        });
+
+    }, 380);
+
+    // Initial Setup
+    renderServoCards();
+    renderPresetsGrid();
+
+    // Modal Events
+    const helpModal = document.getElementById('helpModal');
+    document.getElementById('openHelpModal').addEventListener('click', () => helpModal.classList.add('open'));
+    document.getElementById('closeHelpModal').addEventListener('click', () => helpModal.classList.remove('open'));
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) helpModal.classList.remove('open');
+    });
+
+  </script>
+</body>
+</html>
